@@ -81,7 +81,7 @@ def signup():
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user)
-        return redirect(url_for('home'))
+        return redirect(url_for('login'))
     return render_template('signup.html', form=form)
 
 
@@ -90,6 +90,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -97,22 +98,23 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
-            return redirect(url_for('home'))
+            return redirect(url_for('my_movie'))
         else:
             flash('Login unsuccessful. Check your credentials.')
     return render_template('login.html', form=form)
 
 
-@app.route("/")
+@app.route("/my_movie")
 @login_required  # Only accessible to logged-in users
-def home():
+def my_movie():
     user_movies = Movie.query.filter_by(user=current_user).order_by(Movie.rating).all()
     for i in range(len(user_movies)):
         user_movies[i].ranking = len(user_movies) - i
     db.session.commit()
-    return render_template("index.html", movies=user_movies)
+    return render_template("index.html", movies=user_movies, user=current_user)
 
 
+@login_required
 @app.route("/add", methods=["GET", "POST"])
 def add_movie():
     form = FindMovieForm()
@@ -154,17 +156,18 @@ def rate_movie():
         movie.rating = float(form.rating.data)
         movie.review = form.review.data
         db.session.commit()
-        return redirect(url_for('home'))
+        return redirect(url_for('my_movie'))
     return render_template("edit.html", movie=movie, form=form)
 
 
+@login_required
 @app.route("/delete")
 def delete_movie():
     movie_id = request.args.get("id")
     movie = Movie.query.get(movie_id)
     db.session.delete(movie)
     db.session.commit()
-    return redirect(url_for("home"))
+    return redirect(url_for("my_movie"))
 
 
 @app.route('/logout')
@@ -176,4 +179,5 @@ def logout():
 
 if __name__ == '__main__':
     with app.app_context():
+        db.create_all()
         app.run(debug=True)
