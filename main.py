@@ -7,15 +7,19 @@ from wtforms.validators import DataRequired
 import requests
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
-MOVIE_DB_API_KEY = "40ff0fdc695b2e71c6c99614e3b2de80"
+MOVIE_DB_API_KEY = os.getenv('APIKEY')
 MOVIE_DB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
 MOVIE_DB_INFO_URL = "https://api.themoviedb.org/3/movie"
 MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+app.config['SECRET_KEY'] = os.getenv('APPSECRETKEY')
 Bootstrap(app)
 
 # CREATE DB
