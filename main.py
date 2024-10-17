@@ -9,8 +9,12 @@ from flask_login import LoginManager, login_user, login_required, current_user, 
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
+import smtplib
 
 load_dotenv()
+
+email = os.getenv('EMAIL')
+password = os.getenv('PASSWORD')
 
 
 MOVIE_DB_API_KEY = os.getenv('APIKEY')
@@ -56,6 +60,10 @@ class Movie(db.Model):
 class FindMovieForm(FlaskForm):
     title = StringField("Movie Title", validators=[DataRequired()])
     submit = SubmitField("Add Movie")
+
+class SendMailForm(FlaskForm):
+    message = StringField("Message", validators=[DataRequired()])
+    submit = SubmitField("Send Mail")
 
 
 class RateMovieForm(FlaskForm):
@@ -131,6 +139,20 @@ def add_movie():
     return render_template("add.html", form=form)
 
 
+@login_required
+@app.route("/contact", methods=["GET", "POST"])
+def send_mail():
+    form = SendMailForm()
+    if form.validate_on_submit():
+        message = form.message.data
+        with smtplib.SMTP("smtp.gmail.com") as send_mail:
+            send_mail.starttls()
+            send_mail.login(user=email, password=password)
+            send_mail.sendmail(from_addr=email, to_addrs=email, msg=f'Subject: Message from {current_user.username}\n\n{message}')
+            return redirect(url_for('my_movie'))
+    return render_template("contact.html", form=form)
+
+
 @app.route("/find")
 @login_required  # Only logged-in users can add movies
 def find_movie():
@@ -183,4 +205,4 @@ def logout():
 
 if __name__ == '__main__':
     with app.app_context():
-        app.run()
+        app.run(debug=True)
