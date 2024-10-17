@@ -43,7 +43,7 @@ class User(db.Model, UserMixin):
 # CREATE TABLE
 class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(250), unique=True, nullable=False)
+    title = db.Column(db.String(250), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String(500), nullable=False)
     rating = db.Column(db.Float, nullable=True)
