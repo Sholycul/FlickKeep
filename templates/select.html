@@ -1,6 +1,7 @@
 {% extends 'bootstrap/base.html' %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+
 {% block styles %}
   {{ super() }}
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,700">
@@ -13,11 +14,16 @@
 {% block content %}
 <div class="container">
     <h1 class="heading">Select Movie</h1>
+    {% if options: %}
     {% for movie in options: %}
   <p>
     <a href="{{ url_for('find_movie', id=movie.id) }} ">{{ movie.title }} - {{movie.release_date}}</a>
   </p>
   {% endfor %}
+    {% else %}
+    <p> This is probably a series, try checking for a movie name. <a href="{{ url_for('add_movie') }}">Retry</a>
+    </p>
+    {% endif %}
 
 </div>
 {% endblock %}
