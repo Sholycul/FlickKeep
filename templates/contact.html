@@ -13,6 +13,13 @@
 {% block content %}
 <div class="content">
     <h1 class="heading">Send a mail</h1>
+    {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <p class="alert alert-{{ category }}"> {{ message }} </p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
     {{ wtf.quick_form(form, novalidate=True) }}
 </div>
 {% endblock %}

@@ -45,6 +45,13 @@
 	 margin-bottom: 1rem;
 	 position: relative;
 }
+
+.alert-info {
+    color: #fff;
+    background-color: green; /* Blue background */
+    border-color: green;
+}
+
  .heading:after {
 	 display: block;
 	 content: '';

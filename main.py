@@ -2,16 +2,17 @@ from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField
+from wtforms import StringField, SubmitField, PasswordField, EmailField
 from wtforms.validators import DataRequired
 import requests
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
-import smtplib
+from email_sender import EmailSender
 
 load_dotenv()
+email_sender = EmailSender()
 
 email = os.getenv('EMAIL')
 password = os.getenv('PASSWORD')
@@ -61,7 +62,8 @@ class FindMovieForm(FlaskForm):
     title = StringField("Movie Title", validators=[DataRequired()])
     submit = SubmitField("Add Movie")
 
-class SendMailForm(FlaskForm):
+class EmailForm(FlaskForm):
+    email = EmailField("Your email", validators=[DataRequired()])
     message = StringField("Message", validators=[DataRequired()])
     submit = SubmitField("Send Mail")
 
@@ -103,6 +105,12 @@ def load_user(user_id):
 
 
 @app.route('/', methods=['GET', 'POST'])
+def home():
+    rated_10_movies = Movie.query.filter_by(rating=10).all()
+    print(rated_10_movies)
+    return render_template('home.html', movies=rated_10_movies)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -139,18 +147,22 @@ def add_movie():
     return render_template("add.html", form=form)
 
 
-@login_required
 @app.route("/contact", methods=["GET", "POST"])
-def send_mail():
-    form = SendMailForm()
-    if form.validate_on_submit():
-        message = form.message.data
-        with smtplib.SMTP("smtp.gmail.com") as send_mail:
-            send_mail.starttls()
-            send_mail.login(user=email, password=password)
-            send_mail.sendmail(from_addr=email, to_addrs=email, msg=f'Subject: Message from {current_user.username}\n\n{message}')
-            return redirect(url_for('my_movie'))
-    return render_template("contact.html", form=form)
+def contact():
+    form = EmailForm()
+    if form.validate_on_submit() and current_user.is_authenticated:
+        email_sender.send_email(
+            sender_email=form.email.data,
+            sender_name=current_user.name,
+            subject=f"Message from {current_user.name}",
+            body=form.message.data
+        )
+        flash("Your message has been sent!")
+        return redirect(url_for("contact"))
+    elif not current_user.is_authenticated:
+        flash("You need to login to send email!")
+        return redirect(url_for("login"))
+    return render_template("contact.html", form=form, current_user=current_user)
 
 
 @app.route("/find")
