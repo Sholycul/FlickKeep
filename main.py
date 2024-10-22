@@ -107,7 +107,6 @@ def load_user(user_id):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     rated_10_movies = Movie.query.filter_by(rating=10).all()
-    print(rated_10_movies)
     return render_template('home.html', movies=rated_10_movies)
 
 
@@ -159,7 +158,7 @@ def contact():
             body=form.message.data
         )
         flash("Your message has been sent!")
-        return redirect(url_for("contact"))
+        return redirect(url_for("my_movie"))
     elif not current_user.is_authenticated:
         flash("You need to login to send email!")
         return redirect(url_for("login"))
