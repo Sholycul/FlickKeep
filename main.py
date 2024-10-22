@@ -148,6 +148,7 @@ def add_movie():
 
 
 @app.route("/contact", methods=["GET", "POST"])
+@login_required
 def contact():
     form = EmailForm()
     if form.validate_on_submit() and current_user.is_authenticated:
