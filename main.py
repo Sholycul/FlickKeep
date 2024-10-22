@@ -154,8 +154,8 @@ def contact():
     if form.validate_on_submit() and current_user.is_authenticated:
         email_sender.send_email(
             sender_email=form.email.data,
-            sender_name=current_user.name,
-            subject=f"Message from {current_user.name}",
+            sender_name=current_user.username.title(),
+            subject=f"Message from {current_user.username.title()}",
             body=form.message.data
         )
         flash("Your message has been sent!")
