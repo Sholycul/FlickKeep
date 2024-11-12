@@ -10,6 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
 from email_sender import EmailSender
+from flask_mail import Mail, Message
 
 load_dotenv()
 email_sender = EmailSender()
@@ -26,6 +27,16 @@ MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('APPSECRETKEY')
 Bootstrap(app)
+
+mail = Mail(app)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = os.getenv('EMAIL')
+app.config['MAIL_PASSWORD'] = os.getenv('PASSWORD')
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
+mail = Mail(app)
 
 # CREATE DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///movies.db'
@@ -146,22 +157,34 @@ def add_movie():
     return render_template("add.html", form=form)
 
 
-@app.route("/contact", methods=["GET", "POST"])
+# @app.route("/contact", methods=["GET", "POST"])
+# @login_required
+# def contact():
+#     form = EmailForm()
+#     if form.validate_on_submit() and current_user.is_authenticated:
+#         email_sender.send_email(
+#             sender_email=os.getenv('EMAIL'),
+#             sender_name=current_user.username.title(),
+#             subject=f"Message from {current_user.username.title()} @ {form.email.data}",
+#             body=form.message.data
+#         )
+#         flash("Your message has been sent!")
+#         return redirect(url_for("my_movie"))
+#     elif not current_user.is_authenticated:
+#         flash("You need to login to send email!")
+#         return redirect(url_for("login"))
+#     return render_template("contact.html", form=form, current_user=current_user)
+
+@app.route('/contact', methods=['GET', 'POST'])
 @login_required
 def contact():
     form = EmailForm()
     if form.validate_on_submit() and current_user.is_authenticated:
-        email_sender.send_email(
-            sender_email=form.email.data,
-            sender_name=current_user.username.title(),
-            subject=f"Message from {current_user.username.title()}",
-            body=form.message.data
-        )
+        msg = Message(subject="Contact Form Submission", sender=form.email.data, recipients=[os.getenv('EMAIL')])
+        msg.body = f"{form.message.data} \n\n FROM {form.email.data}"
+        mail.send(msg)
         flash("Your message has been sent!")
         return redirect(url_for("my_movie"))
-    elif not current_user.is_authenticated:
-        flash("You need to login to send email!")
-        return redirect(url_for("login"))
     return render_template("contact.html", form=form, current_user=current_user)
 
 
